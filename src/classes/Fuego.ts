@@ -1,8 +1,4 @@
-import * as firebase from 'firebase/app'
-
-// import 'firebase/firestore'
-// import 'firebase/auth'
-// import 'firebase/functions'
+import firebase from 'firebase/compat/app'
 
 type Config = Parameters<typeof firebase.initializeApp>[0]
 
