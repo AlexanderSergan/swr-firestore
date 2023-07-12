@@ -1,5 +1,9 @@
 import firebase from 'firebase/compat/app'
 
+// import 'firebase/firestore'
+// import 'firebase/auth'
+// import 'firebase/functions'
+
 type Config = Parameters<typeof firebase.initializeApp>[0]
 
 export class Fuego {
