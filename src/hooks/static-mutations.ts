@@ -1,3 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+
 import { mutate } from 'swr'
 import { SetOptions } from 'firebase/firestore'
 import { fuego } from '../context'

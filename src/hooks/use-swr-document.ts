@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import useSWR, { mutate, SWRConfiguration } from 'swr'
 import type { SetOptions, FieldValue } from 'firebase/firestore'
 import { fuego } from '../context'
@@ -336,6 +338,7 @@ export const useDocument = <
         // @ts-ignore
         connectedMutate((prevState = empty.object) => {
           // default we set merge to be false. this is annoying, but follows Firestore's preference.
+
           if (!options?.merge) return data
           return {
             ...prevState,

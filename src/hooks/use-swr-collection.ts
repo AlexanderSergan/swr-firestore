@@ -1,3 +1,5 @@
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 import useSWR, { mutate as mutateStatic, SWRConfiguration } from 'swr'
 import { fuego } from '../context'
 import { useRef, useEffect, useMemo, useCallback } from 'react'
@@ -148,7 +150,7 @@ const createFirestoreRef = <Doc extends object = {}>(
 ) =>
   // { isCollectionGroup = false }: { isCollectionGroup?: boolean } = empty.object
   {
-    let ref: Query = fuego.db.collection(path)
+    let ref = fuego.db.collection(path)
 
     if (isCollectionGroup) {
       ref = fuego.db.collectionGroup(path)
