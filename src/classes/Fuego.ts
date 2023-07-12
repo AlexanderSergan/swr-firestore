@@ -12,6 +12,8 @@ export class Fuego {
   public functions: typeof firebase.functions
   public storage: typeof firebase.storage
   constructor(config: Config) {
+    console.log('🥑firestore apps:🥑\n', firebase?.apps)
+
     this.db = !firebase.apps.length
       ? firebase.initializeApp(config).firestore()
       : firebase.app().firestore()

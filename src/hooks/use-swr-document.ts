@@ -1,5 +1,5 @@
 import useSWR, { mutate, SWRConfiguration } from 'swr'
-import type { SetOptions, FieldValue } from '@firebase/firestore-types'
+import type { SetOptions, FieldValue } from 'firebase/firestore'
 import { fuego } from '../context'
 import { useRef, useEffect, useCallback } from 'react'
 import { empty } from '../helpers/empty'
@@ -9,7 +9,6 @@ import { isDev } from '../helpers/is-dev'
 import { withDocumentDatesParsed } from '../helpers/doc-date-parser'
 import { deleteDocument } from './static-mutations'
 
- 
 type Options<Doc extends Document = Document> = {
   /**
    * If `true`, sets up a real-time subscription to the Firestore backend.
@@ -40,7 +39,7 @@ type Options<Doc extends Document = Document> = {
 
 type ListenerReturnType<Doc extends Document = Document> = {
   initialData: Doc
-  unsubscribe: ReturnType<ReturnType<typeof fuego['db']['doc']>['onSnapshot']>
+  unsubscribe: ReturnType<ReturnType<(typeof fuego)['db']['doc']>['onSnapshot']>
 }
 
 export const getDocument = async <Doc extends Document = Document>(
@@ -66,7 +65,7 @@ export const getDocument = async <Doc extends Document = Document>(
   const data = await fuego.db
     .doc(path)
     .get()
-    .then(doc => {
+    .then((doc) => {
       const docData =
         doc.data({
           serverTimestamps: 'estimate',
@@ -83,13 +82,13 @@ export const getDocument = async <Doc extends Document = Document>(
         )
       }
       return withDocumentDatesParsed(
-        ({
+        {
           ...docData,
           id: doc.id,
           exists: doc.exists,
           hasPendingWrites: doc.metadata.hasPendingWrites,
           __snapshot: ignoreFirestoreDocumentSnapshotField ? undefined : doc,
-        } as unknown) as Doc,
+        } as unknown as Doc,
         parseDates
       )
     })
@@ -100,15 +99,15 @@ export const getDocument = async <Doc extends Document = Document>(
   collection.pop() // remove last item, which is the /id
   collection = collection.join('/') // rejoin the path
   if (collection) {
-    collectionCache.getSWRKeysFromCollectionPath(collection).forEach(key => {
+    collectionCache.getSWRKeysFromCollectionPath(collection).forEach((key) => {
       mutate(
         key,
         (currentState: Doc[] = empty.array): Doc[] => {
           // don't mutate the current state if it doesn't include this doc
-          if (!currentState.some(doc => doc.id === data.id)) {
+          if (!currentState.some((doc) => doc.id === data.id)) {
             return currentState
           }
-          return currentState.map(document => {
+          return currentState.map((document) => {
             if (document.id === data.id) {
               return data
             }
@@ -141,17 +140,17 @@ const createListenerAsync = async <Doc extends Document = Document>(
     ignoreFirestoreDocumentSnapshotField?: boolean
   } = {}
 ): Promise<ListenerReturnType<Doc>> => {
-  return await new Promise(resolve => {
-    const unsubscribe = fuego.db.doc(path).onSnapshot(doc => {
+  return await new Promise((resolve) => {
+    const unsubscribe = fuego.db.doc(path).onSnapshot((doc) => {
       const docData = doc.data() ?? empty.object
       const data = withDocumentDatesParsed<Doc>(
-        ({
+        {
           ...docData,
           id: doc.id,
           exists: doc.exists,
           hasPendingWrites: doc.metadata.hasPendingWrites,
           __snapshot: ignoreFirestoreDocumentSnapshotField ? undefined : doc,
-        } as unknown) as Doc,
+        } as unknown as Doc,
         parseDates
       )
       mutate(path, data, false)
@@ -177,15 +176,15 @@ const createListenerAsync = async <Doc extends Document = Document>(
       if (collection) {
         collectionCache
           .getSWRKeysFromCollectionPath(collection)
-          .forEach(key => {
+          .forEach((key) => {
             mutate(
               key,
               (currentState: Doc[] = empty.array): Doc[] => {
                 // don't mutate the current state if it doesn't include this doc
-                if (!currentState.some(doc => doc.id && doc.id === data.id)) {
+                if (!currentState.some((doc) => doc.id && doc.id === data.id)) {
                   return currentState
                 }
-                return currentState.map(document => {
+                return currentState.map((document) => {
                   if (document.id === data.id) {
                     return data
                   }
@@ -208,7 +207,7 @@ const createListenerAsync = async <Doc extends Document = Document>(
 
 export const useDocument = <
   Data extends object = {},
-  Doc extends Document = Document<Data>
+  Doc extends Document = Document<Data>,
 >(
   path: string | null,
   options: Options<Doc> = empty.object
@@ -392,7 +391,7 @@ export const useDocument = <
      *
      * **Note**: This is not necessary to use. `useDocument` already unmounts the listener for you. This is only intended if you want to unsubscribe on your own.
      */
-    unsubscribe: unsubscribeRef.current
+    unsubscribe: unsubscribeRef.current,
   }
 }
 

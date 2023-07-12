@@ -1,4 +1,4 @@
-import useSWR, { mutate as mutateStatic, SWRConfiguration, } from 'swr'
+import useSWR, { mutate as mutateStatic, SWRConfiguration } from 'swr'
 import { fuego } from '../context'
 import { useRef, useEffect, useMemo, useCallback } from 'react'
 // import { useMemoOne as useMemo } from 'use-memo-one'
@@ -6,13 +6,13 @@ import { empty } from '../helpers/empty'
 import { collectionCache } from '../classes/Cache'
 
 // type Document<T = {}> = T & { id: string }
-
 import {
   FieldPath,
   OrderByDirection,
   WhereFilterOp,
   Query,
-} from '@firebase/firestore-types'
+} from 'firebase/firestore'
+
 import { isDev } from '../helpers/is-dev'
 import { withDocumentDatesParsed } from '../helpers/doc-date-parser'
 import { Document } from '../types'
@@ -22,7 +22,7 @@ type KeyHack = string & {} // hack to also allow strings
 // here we get the "key" from our data, to add intellisense for any "orderBy" in the queries and such.
 type OrderByArray<Doc extends object = {}, Key = keyof Doc> = [
   Key | FieldPath | KeyHack,
-  OrderByDirection
+  OrderByDirection,
 ]
 type OrderByItem<Doc extends object = {}, Key = keyof Doc> =
   | OrderByArray<Doc>
@@ -35,7 +35,7 @@ type OrderByType<Doc extends object = {}> =
 type WhereItem<Doc extends object = {}, Key = keyof Doc> = [
   Key | FieldPath | KeyHack,
   WhereFilterOp,
-  unknown
+  unknown,
 ]
 type WhereArray<Doc extends object = {}> = WhereItem<Doc>[]
 type WhereType<Doc extends object = {}> = WhereItem<Doc> | WhereArray<Doc>
@@ -96,9 +96,9 @@ export const getCollection = async <Doc extends Document = Document>(
   } = empty.object
 ) => {
   const ref = createFirestoreRef(path, query)
-  const data: Doc[] = await ref.get().then(querySnapshot => {
+  const data: Doc[] = await ref.get().then((querySnapshot) => {
     const array: typeof data = []
-    querySnapshot.forEach(doc => {
+    querySnapshot.forEach((doc) => {
       const docData =
         doc.data({
           serverTimestamps: 'estimate',
@@ -159,7 +159,7 @@ const createFirestoreRef = <Doc extends object = {}>(
         return !!(w as WhereArray) && Array.isArray(w[0])
       }
       if (multipleConditions(where)) {
-        where.forEach(w => {
+        where.forEach((w) => {
           ref = ref.where(w[0] as string | FieldPath, w[1], w[2])
         })
       } else if (typeof where[0] === 'string' && typeof where[1] === 'string') {
@@ -212,7 +212,7 @@ const createFirestoreRef = <Doc extends object = {}>(
 
 type ListenerReturnType<Doc extends Document = Document> = {
   initialData: Doc[] | null
-  unsubscribe: ReturnType<ReturnType<typeof fuego['db']['doc']>['onSnapshot']>
+  unsubscribe: ReturnType<ReturnType<(typeof fuego)['db']['doc']>['onSnapshot']>
 }
 
 const createListenerAsync = async <Doc extends Document = Document>(
@@ -232,14 +232,14 @@ const createListenerAsync = async <Doc extends Document = Document>(
     ignoreFirestoreDocumentSnapshotField?: boolean
   }
 ): Promise<ListenerReturnType<Doc>> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const query: CollectionQueryType = JSON.parse(queryString) ?? {}
     const ref = createFirestoreRef(path, query)
     const unsubscribe = ref.onSnapshot(
       { includeMetadataChanges: true },
-      querySnapshot => {
+      (querySnapshot) => {
         const data: Doc[] = []
-        querySnapshot.forEach(doc => {
+        querySnapshot.forEach((doc) => {
           const docData =
             doc.data({
               serverTimestamps: 'estimate',
@@ -283,9 +283,8 @@ const createListenerAsync = async <Doc extends Document = Document>(
   })
 }
 
-export type CollectionSWROptions<
-  Doc extends Document = Document
-> = SWRConfiguration<Doc[] | null>
+export type CollectionSWROptions<Doc extends Document = Document> =
+  SWRConfiguration<Doc[] | null>
 /**
  * Call a Firestore Collection
  * @template Doc
@@ -295,7 +294,7 @@ export type CollectionSWROptions<
  */
 export const useCollection = <
   Data extends object = {},
-  Doc extends Document = Document<Data>
+  Doc extends Document = Document<Data>,
 >(
   path: string | null,
   query: CollectionQueryType<Data> & {
@@ -508,17 +507,17 @@ export const useCollection = <
 
       const ref = fuego.db.collection(path)
 
-      const docsToAdd: Doc[] = (dataArray.map(doc => ({
+      const docsToAdd: Doc[] = dataArray.map((doc) => ({
         ...doc,
         // generate IDs we can use that in the local cache that match the server
         id: ref.doc().id,
-      })) as unknown) as Doc[] // solve this annoying TS bug 😅
+      })) as unknown as Doc[] // solve this annoying TS bug 😅
 
       // add to cache
       if (!listen) {
         // we only update the local cache if we don't have a listener set up
         // why? because Firestore automatically handles this part for subscriptions
-        mutate(prevState => {
+        mutate((prevState) => {
           const state = prevState ?? empty.array
           return [...state, ...docsToAdd]
         }, false)

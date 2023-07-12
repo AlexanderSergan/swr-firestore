@@ -1,5 +1,5 @@
 import { mutate } from 'swr'
-import { SetOptions } from '@firebase/firestore-types'
+import { SetOptions } from 'firebase/firestore'
 import { fuego } from '../context'
 import { empty } from '../helpers/empty'
 import { collectionCache } from '../classes/Cache'
@@ -21,7 +21,7 @@ const revalidateDocument = (path: string) => {
  */
 const revalidateCollection = (path: string) => {
   const promises: Promise<any>[] = []
-  collectionCache.getSWRKeysFromCollectionPath(path).forEach(key => {
+  collectionCache.getSWRKeysFromCollectionPath(path).forEach((key) => {
     promises.push(mutate(key))
   })
   return Promise.all(promises)
@@ -38,13 +38,7 @@ const set = <Data extends object = {}, Doc extends Document = Document<Data>>(
 ) => {
   if (path === null) return null
 
-  const isDocument =
-    path
-      .trim()
-      .split('/')
-      .filter(Boolean).length %
-      2 ===
-    0
+  const isDocument = path.trim().split('/').filter(Boolean).length % 2 === 0
 
   if (!isDocument)
     throw new Error(
@@ -71,14 +65,14 @@ data: ${JSON.stringify(data)}`
   const docId = collection.pop() // remove last item, which is the /doc-id
   collection = collection.join('/')
 
-  collectionCache.getSWRKeysFromCollectionPath(collection).forEach(key => {
+  collectionCache.getSWRKeysFromCollectionPath(collection).forEach((key) => {
     mutate(
       key,
       (currentState: Doc[] = empty.array) => {
         // don't mutate the current state if it doesn't include this doc
         // why? to prevent creating a new reference of the state
         // creating a new reference could trigger unnecessary re-renders
-        if (!currentState.some(doc => doc.id === docId)) {
+        if (!currentState.some((doc) => doc.id === docId)) {
           return currentState
         }
         return currentState.map((document = empty.object as Doc) => {
@@ -93,12 +87,12 @@ data: ${JSON.stringify(data)}`
     )
   })
 
-  return fuego.db.doc(path).set(data, options as SetOptions )
+  return fuego.db.doc(path).set(data, options as SetOptions)
 }
 
 const update = <
   Data extends object = {},
-  Doc extends Document = Document<Data>
+  Doc extends Document = Document<Data>,
 >(
   path: string | null,
   data: Partial<Data>,
@@ -108,13 +102,7 @@ const update = <
   ignoreLocalMutation = false
 ) => {
   if (path === null) return null
-  const isDocument =
-    path
-      .trim()
-      .split('/')
-      .filter(Boolean).length %
-      2 ===
-    0
+  const isDocument = path.trim().split('/').filter(Boolean).length % 2 === 0
 
   if (!isDocument)
     throw new Error(
@@ -140,12 +128,12 @@ data: ${JSON.stringify(data)}`
   const docId = collection.pop() // remove last item, which is the /doc-id
   collection = collection.join('/')
 
-  collectionCache.getSWRKeysFromCollectionPath(collection).forEach(key => {
+  collectionCache.getSWRKeysFromCollectionPath(collection).forEach((key) => {
     mutate(
       key,
       (currentState: Doc[] = empty.array): Doc[] => {
         // don't mutate the current state if it doesn't include this doc
-        if (!currentState.some(doc => doc.id === docId)) {
+        if (!currentState.some((doc) => doc.id === docId)) {
           return currentState
         }
         return currentState.map((document = empty.object as Doc) => {
@@ -163,7 +151,7 @@ data: ${JSON.stringify(data)}`
 
 const deleteDocument = <
   Data extends object = {},
-  Doc extends Document = Document<Data>
+  Doc extends Document = Document<Data>,
 >(
   path: string | null,
   /**
@@ -173,13 +161,7 @@ const deleteDocument = <
 ) => {
   if (path === null) return null
 
-  const isDocument =
-    path
-      .trim()
-      .split('/')
-      .filter(Boolean).length %
-      2 ===
-    0
+  const isDocument = path.trim().split('/').filter(Boolean).length % 2 === 0
 
   if (!isDocument)
     throw new Error(
@@ -193,17 +175,17 @@ const deleteDocument = <
     const docId = collection.pop() // remove last item, which is the /doc-id
     collection = collection.join('/')
 
-    collectionCache.getSWRKeysFromCollectionPath(collection).forEach(key => {
+    collectionCache.getSWRKeysFromCollectionPath(collection).forEach((key) => {
       mutate(
         key,
         (currentState: Doc[] = empty.array) => {
           // don't mutate the current state if it doesn't include this doc
           // why? to prevent creating a new reference of the state
           // creating a new reference could trigger unnecessary re-renders
-          if (!currentState.some(doc => doc && doc.id === docId)) {
+          if (!currentState.some((doc) => doc && doc.id === docId)) {
             return currentState
           }
-          return currentState.filter(document => {
+          return currentState.filter((document) => {
             if (!document) return false
             if (document.id === docId) {
               // delete this doc
